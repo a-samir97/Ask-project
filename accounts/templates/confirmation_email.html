@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>Email Confirmation</title>
+  </head>
+  <body>
+    <p> Confirm your email now </p>
+    <a href="http://{{ request.META.HTTP_HOST }}{% url 'accounts:PasswordResetConfirm' user.uuid %}"> press this link </a>
+  </body>
+</html>
