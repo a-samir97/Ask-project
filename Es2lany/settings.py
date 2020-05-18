@@ -163,3 +163,7 @@ EMAIL_HOST_PASSWORD = 'SG.VCTBZSwYRvutcoKr5DtlZg.dlwo7xKe5XWh4mLjBsmXgsTKpbf1Cj3
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+import dj_database_url
+DATABASES['default'] =  dj_database_url.config()
+
