@@ -15,37 +15,23 @@ class AccountSerializer(serializers.ModelSerializer):
 
         label='Password'
     )
-    password2 = serializers.CharField(style={
-        'input_type': 'password'
-        },
-
-        label='Password confirmation',
-
-        write_only=True,
-    )
-
 
     class Meta:
         model = Account
         fields = (
                 'username', 'email', 'password',
-                'password2', 'sex', 'birthday'
+                'gender', 'birthdate'
             )
 
     def create(self, validated_data):
-        # check if the password equal the password confirmation
-
-        if  validated_data['password'] == validated_data['password2']:
-            new_account = Account(
-                username=validated_data['username'],
-                email=validated_data['email'],
-                sex=validated_data['sex'],
-                birthday=validated_data['birthday']
-            )
-            new_account.set_password(validated_data['password'])
-            new_account.uuid = uuid.uuid4()
-            new_account.save()
-            send_email_confirmation(new_account, self.context['request'])
-            return new_account
-        else:
-            raise ValidationError("password confirmation should equal password.")
+        new_account = Account(
+            username=validated_data['username'],
+            email=validated_data['email'],
+            gender=validated_data['gender'],
+            birthdate=validated_data['birthdate']
+        )
+        new_account.set_password(validated_data['password'])
+        new_account.uuid = uuid.uuid4()
+        new_account.save()
+        send_email_confirmation(new_account, self.context['request'])
+        return new_account

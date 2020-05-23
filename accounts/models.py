@@ -8,9 +8,9 @@ class Account(AbstractUser):
         ('F', 'Female')
     )
 
-    sex = models.CharField(choices=SEX_CHOICES, max_length=1)
+    gender = models.CharField(choices=SEX_CHOICES, max_length=1)
     # edit it
-    birthday = models.DateField(null=True)
+    birthdate = models.DateField(null=True)
     email = models.EmailField(unique=True)
     confirmed = models.BooleanField(default=False)
 
