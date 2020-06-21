@@ -1,26 +1,24 @@
 from django.contrib.auth import authenticate, login, logout
 from django.views.decorators.csrf import csrf_exempt
 
-#from rest_framework.authtoken.models import Token
+from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.generics import CreateAPIView
-from rest_framework.authtoken.models import Token
 
 from .models import Account
-from .serializers import AccountSerializer
+from .serializers import AccountSignupSerializer
 from .utils import send_email_confirmation, send_email_password_reset
 
 import uuid
 
 class AccountCreateViewAPI(CreateAPIView):
     queryset = Account
-    serializer_class = AccountSerializer
+    serializer_class = AccountSignupSerializer
     permission_classes = (AllowAny,)
 
-@csrf_exempt
 @api_view(['POST'])
 @permission_classes((AllowAny,))
 def loginAPI(request):
@@ -48,19 +46,31 @@ def loginAPI(request):
         )
     # if authencation passes ...
     # generate token for the authenticated user ..
-    user_token = Token.objects.create(user=user)
-    # return generated token and OK response
-    return Response(
-            {
-            'token': user_token.key
-            },
-        status=status.HTTP_200_OK
-        )
+    user_token, created = Token.objects.get_or_create(user=user)
+    # if new token is generated for the user 
+    if created:
+        # return generated token and OK response
+        return Response(
+                {
+                'token': user_token.key
+                },
+            status=status.HTTP_200_OK
+            )
+    # if token already exists ..
+    else:
+        # delete the current token 
+        user.auth_token.delete()
+        # generate a new token for the user 
+        token = Token.objects.create(user=user)
+        # return token key with response 200 ok
+        return Response({'token': token.key}, status=status.HTTP_200_OK)
 
-@api_view(['GET'])
+@api_view(['POST'])
 def LogoutAPI(request):
     # if requested user is authenticated ...
-    if request.user.is_authenticated and request.auth and request.user:
+    if request.user.is_authenticated \
+        and request.auth \
+        and request.user:
         # delete token's user
         request.user.auth_token.delete()
         # return HTTP_200_OK
@@ -104,11 +114,11 @@ def confirm_email(request, user_uuid):
             status=status.HTTP_404_NOT_FOUND
         )
     # check if the requested user has uuid ...
-    if user.uuid == user_uuid:
+    if user.confirm_email_token == user_uuid:
         # user now has confirmed his email
         user.confirmed = True
         # remove uuid from user
-        user.uuid = None
+        user.confirm_email_token = None
         # save model after editting
         user.save()
         # return Response 200 OK
@@ -124,7 +134,6 @@ def confirm_email(request, user_uuid):
     )
 
 # - PasswordResetView sends the mail
-@csrf_exempt
 @api_view(['POST'])
 @permission_classes((AllowAny,))
 def password_reset(request):
@@ -136,7 +145,7 @@ def password_reset(request):
         # get the user by email
         user = Account.objects.filter(email=email).first()
         # generate token to the user
-        user.uuid = uuid.uuid4()
+        user.reset_password_token = uuid.uuid4()
         # save user model
         user.save()
         # send mail to the user, to confirm reset the passwor
@@ -152,50 +161,24 @@ def password_reset(request):
             status=status.HTTP_404_NOT_FOUND
         )
 
-# - PasswordResetDoneView shows a success message for the above
-@api_view(['GET'])
-def password_reset_done(request):
-    # if request user has uuid
-    if  request.user.uuid:
-        return Response({
-            "success": "Email has been sent to you, Please check your email"
-            },
-            status=status.HTTP_200_OK
-        )
-    # if requested user has not uuid field
-    else:
-        return Response({
-            'error' : 'please there is an error, please try to reset your email again'
-        },
-        status=status.HTTP_400_BAD_REQUEST
-    )
-
 # - PasswordResetConfirmView checks the link the user clicked and
 #   prompts for a new password
-@csrf_exempt
 @api_view(['POST'])
 @permission_classes((AllowAny,))
 def password_reset_confirm(request, user_uuid):
     # check if the requested user has uuid
-    if request.user.uuid:
+    if request.user.reset_password_token and \
+        request.user.reset_password_token == user_uuid:
         # get the requested data
         password = request.data.get('password')
-        password_confirmation = request.data.get('password-confirmation')
-        # check if password equal password-confirmation
-        if password == password_confirmation:
-            # set the new password
-            request.user.set_password(password)
-            # set the uuid of the user to be null
-            request.user.uuid = None
-            # save user model after editting
-            request.user.save()
-            # return response  ( 201 or 200 )?
-            return Response(status=status.HTTP_200_OK)
-        # if password  not equal password_confirmation
-        else:
-            return Response({
-                'error' : "Password does not mathc password confirmation"
-            }, status=status.HTTP_400_BAD_REQUEST)
+        # set the new password
+        request.user.set_password(password)
+        # set the uuid of the user to be null
+        request.user.reset_password_token = None
+        # save user model after editting
+        request.user.save()
+        # return response  ( 201 or 200 )?
+        return Response(status=status.HTTP_200_OK)
     else:
         return Response({
             'error': "there is something wrong"
