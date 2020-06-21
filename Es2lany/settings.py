@@ -43,6 +43,7 @@ INSTALLED_APPS = [
 
     # our apps
     'accounts',
+    'ask',
     
     # 3rd apps
     'rest_framework',
