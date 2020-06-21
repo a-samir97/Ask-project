@@ -25,7 +25,8 @@ urlpatterns = [
     path('admin/', admin.site.urls),
 
     path('api/v1/accounts/',include('accounts.urls',namespace='accounts')),
+    path('api/v1/questions/',include('ask.urls')),
     
-    path('',include_docs_urls(title='Es2alny API',public=False)),
+    path('docs/',include_docs_urls(title='Es2alny API',public=False)),
     path('schema/', schema_view),
 ]
