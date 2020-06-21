@@ -27,6 +27,6 @@ urlpatterns = [
     path('api/v1/accounts/',include('accounts.urls',namespace='accounts')),
     path('api/v1/questions/',include('ask.urls')),
     
-    path('docs/',include_docs_urls(title='Es2alny API',public=False)),
+    path('docs/',include_docs_urls(title='Es2alny API',public=True, permission_classes=(AllowAny,)),
     path('schema/', schema_view),
 ]
