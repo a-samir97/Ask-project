@@ -3,10 +3,12 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from accounts.models import Account, Category
-from accounts.serializers import AccountShowSerializer, CategorySerializer
+from accounts.serializers import AccountShowSerializer, CategorySerializer, CategoryUserSerializer
 
 from .serializers import QuestionSerializer, AnswerSerializer
 from .models import Question, Answer
+
+import json
 
 @api_view(['POST'])
 def ask_question(request, username):
@@ -128,25 +130,25 @@ def get_all_categories(request):
     return Response({'data': serializer.data }, status=status.HTTP_200_OK)
 
 @api_view(['POST'])
-def add_category(request):
+def add_category_to_user(request):
 
     categories = request.data.get('data')
     current_user = request.user
 
     for category in categories:
-        try:
-            get_category = Category.objects.filter(category_name=category).first()
-            if get_category:
-                current_user.category.add(get_category)
-        except:
-            pass
+
+        new_category = Category.objects.filter(category_name=category).first()
+        if get_category:
+            current_user.category.add(new_category)
+    
     
     return Response({}, status=status.HTTP_200_OK)
 
 @api_view(['GET'])
-def get_category_users(request):
+def get_all_categories_of_current_user(request):
+    
     # get current user 
-    current_user = request.user 
+    current_user = request.user
 
     # get all categories that the current user in it 
     all_categories = current_user.category.all()
@@ -154,4 +156,17 @@ def get_category_users(request):
     return Response({
         'data': serializer.data
     }, status=status.HTTP_200_OK)
+
+@api_view(['GET'])
+def get_mutual_categories(request):
     
+    # get current user 
+    current_user = request.user
+
+    # get all categories that the current user in it 
+    all_categories = current_user.category.all()
+    serializer = CategoryUserSerializer(all_categories, many=True)
+    return Response({
+        'data': serializer.data
+    }, status=status.HTTP_200_OK)
+

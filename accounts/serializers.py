@@ -39,13 +39,19 @@ class AccountSignupSerializer(serializers.ModelSerializer):
 class AccountShowSerializer(serializers.ModelSerializer):
     class Meta:
         model = Account
-        fields = ['id', 'username', 'email']
+        fields = ['username', 'email']
 
-class CategorySerializer(serializers.ModelSerializer): 
+
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = ('category_name',)
+
+class CategoryUserSerializer(serializers.ModelSerializer): 
     users = serializers.SerializerMethodField('get_all_users')
     class Meta:
         model = Category
-        fields = '__all__'
+        fields = ('category_name', 'users')
     
     def get_all_users(self, obj):
         users = obj.users.all()

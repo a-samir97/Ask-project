@@ -7,7 +7,8 @@ urlpatterns = [
     path('all-questions/', views.get_all_questions),
     path('all-answers/', views.get_all_answers),
 
-    path('add-categories/', views.add_category),
+    path('add-categories/', views.add_category_to_user),
     path('all-categories/',views.get_all_categories),
-    path('get-users/', views.get_category_users)
+    path('all-categories-of-user/',views.get_all_categories_of_current_user),
+    path('get-mutual-categories/', views.get_mutual_categories),
 ]
